@@ -1,9 +1,10 @@
+import os
 from flask import Flask, request
 import requests
 from bs4 import BeautifulSoup
 
 app = Flask(__name__)
-BOT_TOKEN = 'your_telegram_bot_token_here'
+BOT_TOKEN = '8087028352:AAF1RhB7YeX9KRrMW066Pgy-5TbV5BDycz4'
 
 def send_message(chat_id, text):
     url = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
@@ -57,3 +58,8 @@ def track_click():
 @app.route('/')
 def home():
     return '✅ DuckDuckGo Telegram bot is running!'
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))  # Render sets PORT automatically
+    app.run(host="0.0.0.0", port=port)

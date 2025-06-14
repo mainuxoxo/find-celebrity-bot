@@ -1,10 +1,14 @@
 import os
 import sqlite3
 from flask import Flask, request
+from flask_cors import CORS
 import requests
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse, parse_qs, unquote
 
 app = Flask(__name__)
+CORS(app)  # This line fixes cross-origin errors
+
 BOT_TOKEN = '8087028352:AAF1RhB7YeX9KRrMW066Pgy-5TbV5BDycz4'
 
 click_log = {}
@@ -33,24 +37,33 @@ def cache_set(name, links):
     conn.commit()
     conn.close()
 
-# === Search Function ===
+
 def search_duckduckgo(name):
     cached = cache_get(name)
     if cached:
         return cached
+
     query = f"{name} site:instagram.com OR site:twitter.com OR site:facebook.com"
     url = f"https://html.duckduckgo.com/html/?q={requests.utils.quote(query)}"
     headers = {'User-Agent': 'Mozilla/5.0'}
     res = requests.get(url, headers=headers)
     soup = BeautifulSoup(res.text, 'html.parser')
     links = []
+
     for a in soup.select('.result__a'):
         href = a['href']
-        if any(site in href for site in ["instagram.com", "twitter.com", "facebook.com"]):
-            links.append(href)
+        if "duckduckgo.com/l/?" in href and "uddg=" in href:
+            # Extract and decode the true URL
+            parsed = urlparse(href)
+            query_params = parse_qs(parsed.query)
+            if 'uddg' in query_params:
+                real_url = unquote(query_params['uddg'][0])
+                if any(site in real_url for site in ["instagram.com", "twitter.com", "facebook.com"]):
+                    links.append(real_url)
     links = list(set(links))
     cache_set(name, links)
     return links
+
 
 # === Telegram Webhook ===
 def send_message(chat_id, text):

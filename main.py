@@ -60,16 +60,27 @@ def send_message(chat_id, text):
 @app.route(f'/{BOT_TOKEN}', methods=['POST'])
 def telegram_webhook():
     data = request.get_json()
+    
     if 'message' in data and 'text' in data['message']:
         chat_id = data['message']['chat']['id']
         name = data['message']['text']
         links = search_duckduckgo(name)
+
         if links:
-            msg = "\n".join(links)
-            send_message(chat_id, f"🔍 Found profiles for *{name}*:\n\n{msg}")
+            count = len(links)
+            url_name = name.replace(" ", "+")  # For URL formatting
+            web_url = f"https://find-celebrity-bot.netlify.app/search.html?name={url_name}"
+
+            msg = (
+                f"✅ Any_ID FOUND ({count} found)\n\n"
+                f"🔗 View results here:\n{web_url}"
+            )
+            send_message(chat_id, msg)
         else:
             send_message(chat_id, f"❌ No social profiles found for *{name}*.")
+    
     return '', 200
+
 
 # === Web Interface ===
 @app.route('/web')

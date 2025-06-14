@@ -76,12 +76,19 @@ def telegram_webhook():
     
     if 'message' in data and 'text' in data['message']:
         chat_id = data['message']['chat']['id']
-        name = data['message']['text']
+        text = data['message']['text'].strip()
+
+        # ✅ SKIP bot commands like /start, /help
+        if text.startswith('/'):
+            send_message(chat_id, "👋 Welcome to Any_ID!\n\nSend me a celebrity name to find their social profiles.")
+            return '', 200
+
+        name = text  # This is now safe to treat as a search query
         links = search_duckduckgo(name)
 
         if links:
             count = len(links)
-            url_name = name.replace(" ", "+")  # For URL formatting
+            url_name = name.replace(" ", "+")
             web_url = f"https://find-celebrity-bot.netlify.app/search.html?name={url_name}"
 
             msg = (
@@ -93,6 +100,7 @@ def telegram_webhook():
             send_message(chat_id, f"❌ No social profiles found for *{name}*.")
     
     return '', 200
+
 
 
 # === Web Interface ===
